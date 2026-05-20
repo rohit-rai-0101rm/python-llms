@@ -7,6 +7,7 @@ __pycache__/
 # Conda / venv
 venv/
 env/
+python-llm/
 
 # VS Code
 .vscode/
