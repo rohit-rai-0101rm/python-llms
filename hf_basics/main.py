@@ -5,7 +5,6 @@ from io import BytesIO
 
 pipe = pipeline("image-text-to-text", model="google/gemma-3-4b-it")
 
-# --- Text-only chat ---
 text_messages = [
     {
         "role": "user",

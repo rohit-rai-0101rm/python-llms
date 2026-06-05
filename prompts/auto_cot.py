@@ -59,19 +59,16 @@ User: Who is Elon Musk?
 {"status": "rejected", "reason": "Sorry, I can only answer mathematics-related questions."}
 """
 
-# ── history starts with system prompt only ──
 history = [
     {"role": "system", "content": SYSTEM_PROMPT}
 ]
 
 
 def chat(user_input: str, retries: int = 3, delay: int = 5) -> dict:
-    # Step 1: append user message to history
     history.append({"role": "user", "content": user_input})
 
     for attempt in range(retries):
         try:
-            # Step 2: send FULL history every call
             response = client.chat.completions.create(
                 model="gemini-2.5-flash",
                 response_format={"type": "json_object"},
@@ -80,7 +77,6 @@ def chat(user_input: str, retries: int = 3, delay: int = 5) -> dict:
 
             raw = response.choices[0].message.content
 
-            # Step 3: append assistant reply to history
             history.append({"role": "assistant", "content": raw})
 
             return json.loads(raw)
@@ -90,11 +86,10 @@ def chat(user_input: str, retries: int = 3, delay: int = 5) -> dict:
                 print(f"  Server busy, retry {attempt+1}/{retries} in {delay}s...")
                 time.sleep(delay)
             else:
-                # remove last user message if hard error
                 history.pop()
                 raise e
 
-    history.pop()  # remove user message if all retries fail
+    history.pop()
     return {"status": "error", "reason": "Server unavailable after retries"}
 
 
@@ -128,7 +123,6 @@ def show_history():
     print("=" * 50)
 
 
-# ── main loop ──
 print("=" * 50)
 print("  🧮 MATH ASSISTANT (Chain-of-Thought)")
 print("  Type 'quit' to exit")
@@ -140,28 +134,23 @@ while True:
     try:
         user_input = input("\n You: ").strip()
 
-        # empty input
         if not user_input:
             continue
 
-        # exit
         if user_input.lower() in ["quit", "exit", "q"]:
             print("\n👋 Bye!")
             break
 
-        # show history
         if user_input.lower() == "history":
             show_history()
             continue
 
-        # clear conversation (keep system prompt)
         if user_input.lower() == "clear":
             history.clear()
             history.append({"role": "system", "content": SYSTEM_PROMPT})
             print("\n🗑️  Conversation cleared.")
             continue
 
-        # get response
         result = chat(user_input)
         pretty_print(result)
 

@@ -14,7 +14,6 @@ client = OpenAI(
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
 )
 
-# ── Personas ──
 PERSONAS = {
     "professor": """
     You are a strict MIT mathematics professor with 30 years experience.
@@ -103,17 +102,14 @@ User: What is 10 x 5?
 """
 
 
-# ── Safe JSON parser ──
 def safe_json_parse(raw: str) -> dict:
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
-        # Fix bad escape sequences
         fixed = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', raw)
         try:
             return json.loads(fixed)
         except json.JSONDecodeError:
-            # Extract JSON block if model added extra text
             match = re.search(r'\{.*\}', fixed, re.DOTALL)
             if match:
                 try:
@@ -123,7 +119,6 @@ def safe_json_parse(raw: str) -> dict:
             return {"status": "error", "reason": f"Failed to parse response: {raw[:200]}"}
 
 
-# ── Chat with history ──
 def chat(history: list, user_input: str, retries: int = 3, delay: int = 5) -> dict:
     history.append({"role": "user", "content": user_input})
 
@@ -150,7 +145,6 @@ def chat(history: list, user_input: str, retries: int = 3, delay: int = 5) -> di
     return {"status": "error", "reason": "Server unavailable after retries"}
 
 
-# ── Pretty print ──
 def pretty_print(result: dict):
     if result["status"] == "answered":
         print(f"\n📐 QUESTION     : {result.get('question', '')}")
@@ -172,7 +166,6 @@ def pretty_print(result: dict):
         print(f"\n⚠️  ERROR: {result['reason']}")
 
 
-# ── Show history ──
 def show_history(history: list):
     print("\n📜 CONVERSATION HISTORY")
     print("=" * 55)
@@ -190,7 +183,6 @@ def show_history(history: list):
     print("=" * 55)
 
 
-# ── Persona selector ──
 def select_persona() -> str:
     print("\n🎭 SELECT PERSONA:")
     keys = list(PERSONAS.keys())
@@ -206,7 +198,6 @@ def select_persona() -> str:
     return choice if choice in PERSONAS else "friend"
 
 
-# ── Main loop ──
 print("=" * 55)
 print("  🧮 MATH ASSISTANT — Persona-Based Prompting")
 print("=" * 55)
