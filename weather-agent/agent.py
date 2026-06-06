@@ -12,16 +12,16 @@ warnings.filterwarnings("ignore")
 load_dotenv()
 
 client = OpenAI(
-    api_key=os.environ["GEMINI_API_KEY"],
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    api_key=os.environ["GROK_API_KEY"],
+    base_url="https://api.groq.com/openai/v1"
 )
 
 SYSTEM_PROMPT = """
-You are a weather assistant that thinks and acts step by step.
+You are a weather and also a coding  assistant that thinks and acts step by step.
 
 You have access to this tool:
 - get_weather(city) → returns current weather for a city
-
+- run_command(cmd:str):Takes a system linux command as string nd executes the command on users system and returens the output from that command
 You must respond ONE step at a time using this JSON format:
 {
   "step": "PLAN" | "ACTION" | "OUTPUT",
@@ -35,7 +35,8 @@ How to behave:
 2. For each city, return one ACTION step with tool=get_weather and input=city name.
 3. After all cities are fetched, return OUTPUT with the final weather summary.
 4. If user does not mention a city, return OUTPUT asking which city they mean.
-5. If user asks something not weather-related, return OUTPUT saying you only handle weather.
+5. For coding tasks like editing files, use run_command to read files first (cat filename), then write changes (using shell commands like tee or printf).
+6. Before accessing any file, always run run_command('pwd') first to know the current working directory, then use correct relative paths.
 
 EXAMPLE — User asks: what is the weather in Delhi and Chennai?
 
@@ -52,14 +53,19 @@ Step 4 (after observation):
 {"step": "OUTPUT", "content": "Delhi is 33°C and partly cloudy. Chennai is 32°C and hazy.", "tool": null, "input": null}
 """
 
-available_tools = {}
-
-
 class MyOutputFormat(BaseModel):
     step: str = Field(..., description="The ID of the step: PLAN, ACTION, or OUTPUT")
     content: Optional[str] = Field(None, description="Reasoning text or final answer")
     tool: Optional[str] = Field(None, description="Tool name to call (only for ACTION step)")
     input: Optional[str] = Field(None, description="City name input (only for ACTION step)")
+
+
+
+def run_command(cmd: str) -> str:
+    import subprocess
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    output = result.stdout + result.stderr
+    return output.strip() if output.strip() else "(no output)"
 
 
 def get_weather(city: str) -> str:
@@ -82,7 +88,10 @@ def get_weather(city: str) -> str:
         return json.dumps({"error": f"City '{city}' not found. Please recheck the city name."})
 
 
-available_tools["get_weather"] = get_weather
+available_tools = {
+    "get_weather": get_weather,
+    "run_command": run_command
+}
 
 
 def ask_weather(question: str):
@@ -92,13 +101,15 @@ def ask_weather(question: str):
     ]
 
     while True:
-        response = client.chat.completions.parse(
-            model="gemini-2.5-flash",
-            response_format=MyOutputFormat,
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            response_format={"type": "json_object"},
             messages=messages
         )
-        result = response.choices[0].message.parsed
-        messages.append({"role": "assistant", "content": result.model_dump_json()})
+        raw = response.choices[0].message.content
+        data = json.loads(raw)
+        result = MyOutputFormat(**data)
+        messages.append({"role": "assistant", "content": raw})
 
         if result.step == "PLAN":
             print(f"\n[plan]   {result.content}")
@@ -128,3 +139,23 @@ def main():
 
 
 main()
+
+
+def create_file(filename):
+    with open(filename, w) as f:
+        pass
+
+
+def read_file(filename):
+    try:
+        with open(filename, r) as f:
+            return f.read()
+    except FileNotFoundError:
+        return File
+available_tools.update({
+    "create_file": create_file,
+    "read_file": read_file,
+    "list_directory": list_directory,
+    "delete_file": delete_file,
+    "update_file": update_file
+})
