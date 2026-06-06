@@ -4,6 +4,8 @@ import json
 import requests
 from dotenv import load_dotenv
 from openai import OpenAI
+from pydantic import BaseModel, Field
+from typing import Optional
 
 warnings.filterwarnings("ignore")
 
@@ -15,113 +17,49 @@ client = OpenAI(
 )
 
 SYSTEM_PROMPT = """
-You are a weather assistant that uses Chain-of-Thought reasoning.
-you can call tools if required from the list of avaliable tools
-Rules:
-1. Answer ONLY weather-related questions.
-2. If the question is not weather-related, return this exact JSON:
-   {"status": "rejected", "reason": "Sorry, I can only answer weather-related questions."}
-3. ALWAYS use the get_weather tool to fetch real data before answering.
-4. ALWAYS respond in valid JSON. No text outside JSON.
-5. If the tool returns an error (city not found or invalid), return this exact JSON:
-   {"status": "error", "reason": "Could not find weather data for '<city>'. Please double-check the city name and try again."}
+You are a weather assistant that thinks and acts step by step.
 
-For ALL valid weather questions, follow this reasoning structure and return JSON:
+You have access to this tool:
+- get_weather(city) → returns current weather for a city
 
+You must respond ONE step at a time using this JSON format:
 {
-  "status": "answered",
-  "question": "<restate the question>",
-  "reasoning": {
-    "step1_understand": "<what weather info the user needs>",
-    "step2_plan": "<which city/location to look up>",
-    "step3_fetch": "<what data was retrieved from the weather API>",
-    "step4_interpret": "<make sense of the numbers and conditions>"
-  },
-  "answer": "<final clear weather summary for the user>"
+  "step": "PLAN" | "ACTION" | "OUTPUT",
+  "content": "your reasoning text or final answer",
+  "tool": "get_weather (only if step is ACTION)",
+  "input": "city name (only if step is ACTION)"
 }
 
----
+How to behave:
+1. Start with PLAN — explain what cities you need to look up and why.
+2. For each city, return one ACTION step with tool=get_weather and input=city name.
+3. After all cities are fetched, return OUTPUT with the final weather summary.
+4. If user does not mention a city, return OUTPUT asking which city they mean.
+5. If user asks something not weather-related, return OUTPUT saying you only handle weather.
 
-EXAMPLES (follow this JSON pattern exactly):
+EXAMPLE — User asks: what is the weather in Delhi and Chennai?
 
-### Example 1 — Current temperature
-User: What is the weather in London?
+Step 1:
+{"step": "PLAN", "content": "User wants weather for Delhi and Chennai. I will call get_weather for each city.", "tool": null, "input": null}
 
-{
-  "status": "answered",
-  "question": "What is the weather in London?",
-  "reasoning": {
-    "step1_understand": "User wants to know the current weather conditions in London.",
-    "step2_plan": "Look up London using the get_weather tool.",
-    "step3_fetch": "temperature_c: 14, description: Partly Cloudy, humidity: 72%, wind_kmph: 18",
-    "step4_interpret": "14°C is mild but cool. Partly cloudy skies with moderate wind. A light jacket would be comfortable."
-  },
-  "answer": "It is currently 14°C and partly cloudy in London with 72% humidity and winds at 18 km/h. A light jacket is recommended."
-}
+Step 2:
+{"step": "ACTION", "content": null, "tool": "get_weather", "input": "Delhi"}
 
----
+Step 3 (after observation):
+{"step": "ACTION", "content": null, "tool": "get_weather", "input": "Chennai"}
 
-### Example 2 — Should I carry an umbrella?
-User: Will it rain in Tokyo today? Should I carry an umbrella?
-
-{
-  "status": "answered",
-  "question": "Will it rain in Tokyo today? Should I carry an umbrella?",
-  "reasoning": {
-    "step1_understand": "User wants rain advice for Tokyo to decide whether to carry an umbrella.",
-    "step2_plan": "Look up Tokyo using the get_weather tool and check description and humidity.",
-    "step3_fetch": "temperature_c: 22, description: Light Rain, humidity: 89%, wind_kmph: 12",
-    "step4_interpret": "Light Rain description and 89% humidity both confirm active rainfall. An umbrella is definitely needed."
-  },
-  "answer": "Yes, it is currently experiencing light rain in Tokyo with 89% humidity. Carry an umbrella!"
-}
-
----
-
-### Example 3 — How hot is it?
-User: How hot is it in Dubai right now?
-
-{
-  "status": "answered",
-  "question": "How hot is it in Dubai right now?",
-  "reasoning": {
-    "step1_understand": "User wants to know how hot Dubai currently is.",
-    "step2_plan": "Look up Dubai using the get_weather tool and focus on temperature and feels-like.",
-    "step3_fetch": "temperature_c: 41, feels_like_c: 45, description: Sunny, humidity: 30%, wind_kmph: 20",
-    "step4_interpret": "41°C actual but feels like 45°C due to heat index. Extremely hot — outdoor activity is unsafe without precautions."
-  },
-  "answer": "Dubai is extremely hot at 41°C, feeling like 45°C in the sun. Stay hydrated and avoid prolonged outdoor exposure."
-}
-
----
-
-### Example 4 — Non-weather rejection
-User: What is the capital of France?
-
-{"status": "rejected", "reason": "Sorry, I can only answer weather-related questions."}
-
----
+Step 4 (after observation):
+{"step": "OUTPUT", "content": "Delhi is 33°C and partly cloudy. Chennai is 32°C and hazy.", "tool": null, "input": null}
 """
 
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_weather",
-            "description": "Fetch current weather data for a city using wttr.in",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "city": {
-                        "type": "string",
-                        "description": "The city name, e.g. London, Tokyo, New York"
-                    }
-                },
-                "required": ["city"]
-            }
-        }
-    }
-]
+available_tools = {}
+
+
+class MyOutputFormat(BaseModel):
+    step: str = Field(..., description="The ID of the step: PLAN, ACTION, or OUTPUT")
+    content: Optional[str] = Field(None, description="Reasoning text or final answer")
+    tool: Optional[str] = Field(None, description="Tool name to call (only for ACTION step)")
+    input: Optional[str] = Field(None, description="City name input (only for ACTION step)")
 
 
 def get_weather(city: str) -> str:
@@ -144,79 +82,49 @@ def get_weather(city: str) -> str:
         return json.dumps({"error": f"City '{city}' not found. Please recheck the city name."})
 
 
-def ask_weather(question: str) -> dict:
+available_tools["get_weather"] = get_weather
+
+
+def ask_weather(question: str):
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": question}
     ]
 
-    response = client.chat.completions.create(
-        model="gemini-2.5-flash",
-        messages=messages,
-        tools=tools,
-        tool_choice="auto"
-    )
-
-    message = response.choices[0].message
-
-    if message.tool_calls:
-        messages.append(message)
-
-        for tool_call in message.tool_calls:
-            args = json.loads(tool_call.function.arguments)
-            print(f"[agent] calling get_weather(city='{args['city']}') ...")
-            result = get_weather(**args)
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "content": result
-            })
-
-        final_response = client.chat.completions.create(
+    while True:
+        response = client.chat.completions.parse(
             model="gemini-2.5-flash",
-            response_format={"type": "json_object"},
+            response_format=MyOutputFormat,
             messages=messages
         )
-        raw = final_response.choices[0].message.content
-        return json.loads(raw)
+        result = response.choices[0].message.parsed
+        messages.append({"role": "assistant", "content": result.model_dump_json()})
 
-    raw = message.content
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        return {"status": "rejected", "reason": raw}
+        if result.step == "PLAN":
+            print(f"\n[plan]   {result.content}")
 
+        elif result.step == "ACTION":
+            print(f"[action] calling {result.tool}('{result.input}') ...")
+            tool_fn = available_tools.get(result.tool)
+            if tool_fn:
+                observation = tool_fn(result.input)
+                print(f"[obs]    {observation}")
+                messages.append({"role": "user", "content": f"Observation: {observation}"})
+            else:
+                messages.append({"role": "user", "content": f"Observation: tool '{result.tool}' not found."})
 
-def pretty_print(result: dict):
-    line = "=" * 52
-    status = result.get("status")
-
-    print(line)
-    if status == "answered":
-        print(f"  Question : {result.get('question', '')}")
-        print(line)
-        reasoning = result.get("reasoning", {})
-        print(f"  Step 1   : {reasoning.get('step1_understand', '')}")
-        print(f"  Step 2   : {reasoning.get('step2_plan', '')}")
-        print(f"  Step 3   : {reasoning.get('step3_fetch', '')}")
-        print(f"  Step 4   : {reasoning.get('step4_interpret', '')}")
-        print(line)
-        print(f"  Answer   : {result.get('answer', '')}")
-    elif status in ("rejected", "error"):
-        print(f"  {result.get('reason', 'Unknown error')}")
-    else:
-        print(json.dumps(result, indent=2))
-    print(line)
+        elif result.step == "OUTPUT":
+            print(f"\n[output] {result.content}\n")
+            return
 
 
 def main():
-    print("Weather Agent with CoT (type 'quit' to exit)\n")
+    print("Weather Agent (type 'quit' to exit)\n")
     while True:
         user_query = input("> ")
         if user_query.lower() in ("quit", "exit"):
             break
-        result = ask_weather(user_query)
-        pretty_print(result)
+        ask_weather(user_query)
 
 
 main()
