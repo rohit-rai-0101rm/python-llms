@@ -118,6 +118,7 @@ holoviews @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_
 httpcore @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_941yf7p5zt/croot/httpcore_1748526061031/work
 httptools==0.8.0
 httpx @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_28ztzk1ij8/croot/httpx_1746747850138/work
+httpx-sse==0.4.3
 huggingface_hub==1.17.0
 hvplot @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_c2zgmufo5o/croot/hvplot_1746471225372/work
 hyperlink @ file:///tmp/build/80754af9/hyperlink_1610130746837/work
@@ -167,6 +168,12 @@ jupyterlab_server @ file:///Users/builder/cbouss/buildout/croot/jupyterlab_serve
 jupyterlab_widgets @ file:///Users/builder/cbouss/buildout/croot/jupyterlab_widgets_1735843764609/work
 keyring @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_be9at15ui5/croot/keyring_1745484704517/work
 kiwisolver @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_cc2l_z_0ri/croot/kiwisolver_1737039586949/work
+langchain-classic==1.0.7
+langchain-community==0.4.2
+langchain-core==1.4.2
+langchain-protocol==0.0.16
+langchain-text-splitters==1.1.2
+langsmith==0.8.11
 lazy_loader @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/lazy_loader_1728594662675/work
 lckr_jupyterlab_variableinspector @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_9arj0c61z0/croot/jupyterlab-variableinspector_1744638302188/work
 libarchive-c @ file:///croot/python-libarchive-c_1726069797193/work
@@ -212,6 +219,7 @@ numpydoc @ file:///opt/conda/conda-bld/numpydoc_1643788541039/work
 ollama==0.6.2
 openai==2.38.0
 openpyxl @ file:///Users/builder/cbouss/buildout/croot/openpyxl_1739486465110/work
+orjson==3.11.9
 overrides @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/overrides_1728586843197/work
 packaging @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_a6_qk3qyg7/croot/packaging_1734472142254/work
 pandas @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_4aifrweohv/croot/pandas_1732735109535/work/dist/pandas-2.2.3-cp313-cp313-macosx_11_0_arm64.whl#sha256=8f01410ead9f51bf614097bf4230440a4461983f8acb57141e819b93d81e26d6
@@ -252,7 +260,7 @@ pyct @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/pyct_1731
 pycurl @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_ccc55mpc6t/croot/pycurl_1744743611044/work
 pydantic @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_4blmh3bau_/croot/pydantic_1734736077970/work
 pydantic-extra-types==2.11.1
-pydantic-settings @ file:///Users/builder/cbouss/buildout/croot/pydantic-settings_1735843952737/work
+pydantic-settings==2.14.1
 pydantic_core @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_bdqco4zmod/croot/pydantic-core_1734726070262/work
 PyDispatcher @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/pydispatcher_1728599194033/work
 pydocstyle @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/pydocstyle_1728595035306/work
@@ -272,6 +280,7 @@ pyobjc-framework-FSEvents @ file:///Users/builder/cbouss/perseverance-python-bui
 pyodbc @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_34pbsruafo/croot/pyodbc_1737479629856/work
 pyOpenSSL @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_fc2tw3ggkp/croot/pyopenssl_1741343830893/work
 pyparsing @ file:///Users/builder/cbouss/buildout/croot/pyparsing_1735850351026/work
+pypdf==6.13.1
 PyQt5==5.15.10
 PyQt5_sip @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_2fujrnx99b/croot/pyqt-split_1736540539550/work/pyqt_sip
 PyQtWebEngine==5.15.6
@@ -301,7 +310,7 @@ queuelib @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/queue
 readchar @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/readchar_1728593329529/work
 referencing @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/referencing_1728585313667/work
 regex==2026.5.9
-requests @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_ee45nsd33z/croot/requests_1730999134038/work
+requests==2.34.2
 requests-file @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_bfbabejyv2/croot/requests-file_1749719739174/work
 requests-toolbelt @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/requests-toolbelt_1731721330284/work
 rfc3339_validator @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/rfc3339-validator_1731706731994/work
@@ -385,6 +394,7 @@ uc-micro-py @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/uc
 ujson @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_bb79980w_r/croot/ujson_1736541985924/work
 Unidecode @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/unidecode_1728620987468/work
 urllib3 @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_8dwi5l2dj0/croot/urllib3_1737133640453/work
+uuid_utils==0.16.0
 uvicorn==0.48.0
 uvloop==0.22.1
 w3lib @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/w3lib_1728593544972/work
@@ -402,6 +412,7 @@ wrapt @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_30cv
 wurlitzer @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/wurlitzer_1728595793015/work
 xarray @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_da7wjaws3t/croot/xarray_1749132719186/work
 xlwings @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_4cvi5l9ij4/croot/xlwings_1743525459147/work
+xxhash==3.7.0
 xyzservices @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/xyzservices_1728591543650/work
 yapf @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/yapf_1728595829064/work
 yarl @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_01an_nyy_6/croot/yarl_1732546853427/work
