@@ -6,21 +6,25 @@ import os
 
 load_dotenv()
 
-embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-
-client = OpenAI(
-    api_key=os.environ["GEMINI_API_KEY"],
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-)
-
 
 def process_query(query: str):
+    embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    client = OpenAI(
+        api_key=os.environ["GEMINI_API_KEY"],
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    )
     vector_db = QdrantVectorStore.from_existing_collection(
         url="http://localhost:6333",
         collection_name="learning_rag",
         embedding=embedding_model
     )
     search_result = vector_db.similarity_search(query=query)
+    seen = set()
+    search_result = [r for r in search_result if not (r.page_content in seen or seen.add(r.page_content))]
+    print(f"\n--- Search Results ({len(search_result)} chunks) ---")
+    for i, r in enumerate(search_result):
+        print(f"[{i+1}] Page {r.metadata.get('page_label')} | {r.page_content[:200]}")
+    print("---\n")
 
     context = "\n\n\n".join([
         f"Page Content: {result.page_content}\nPage Number: {result.metadata.get('page')}\nPage Label: {result.metadata.get('page_label')}\nSource: {result.metadata.get('source')}"
