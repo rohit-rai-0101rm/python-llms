@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 warnings.filterwarnings("ignore")
 
 
+
 load_dotenv()
 
 from google import genai

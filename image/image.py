@@ -12,7 +12,7 @@ client = OpenAI(
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
 )
 
-IMAGE_URL = "https://www.shutterstock.com/image-photo/indian-man-selling-vegetables-potato-260nw-2399360241.jpg" 
+IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQL8vSEHMcX9kr-_MY0q7p294hU8XgqTOXJ7w&s" 
 
 response = client.chat.completions.create(
     model="gemini-2.5-flash",
