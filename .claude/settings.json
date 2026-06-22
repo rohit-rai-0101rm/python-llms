@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ollama list *)",
+      "Bash(curl -s http://localhost:11434/api/tags)",
+      "Bash(python3 -c \"import sys,json; models=json.load\\(sys.stdin\\).get\\('models',[]\\); [print\\(m['name']\\) for m in models]\")",
+      "Bash(curl -s -X POST http://localhost:11434/api/pull -d '{\"name\":\"llama3.2:3b\"}' --no-buffer)",
+      "Bash(python3 -c ' *)"
+    ]
+  }
+}

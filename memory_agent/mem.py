@@ -1,10 +1,14 @@
 import os
 os.environ["MEM0_TELEMETRY"] = "False"  # belt-and-suspenders, silence telemetry thread
-
+from dotenv import load_dotenv
 import time
 from mem0 import Memory
 import ollama
+load_dotenv() 
 
+NEO4J_URI = os.getenv("NEO4J_URI")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 # Mem0 Configuration for a 100% Local Pipeline
 config = {
     "version": "v1.1",
@@ -18,8 +22,17 @@ config = {
     "llm": {
         "provider": "ollama",
         "config": {
-            "model": "gemma2:2b",
+            "model": "llama3.2:3b",
             "ollama_base_url": "http://localhost:11434"
+        }
+    },
+
+  "graph_store": {
+        "provider": "neo4j",
+        "config": {
+            "url": NEO4J_URI,
+            "username": NEO4J_USERNAME,
+            "password": NEO4J_PASSWORD
         }
     },
     "vector_store": {
@@ -83,7 +96,7 @@ while True:
         system_prompt = f"You are a helpful assistant. Here is everything you currently remember about the user:\n{context}"
 
         response = ollama.chat(
-            model="gemma2:2b",
+            model="llama3.2:3b",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_query}
@@ -97,13 +110,12 @@ while True:
         print(f"\nOllama Local Response Error: {e}")
         continue
 
-    # 3. SAVE NEW FACTS INTO MEMORY (LOCAL STRINGS)
+    # 3. SAVE NEW FACTS INTO MEMORY — infer=True lets the LLM extract entities for Neo4j graph
     try:
-        # infer=False stores raw text directly, skips unreliable small-model fact extraction
         add_result = mem_client.add(
             user_query,
             user_id=USER_ID,
-            infer=False
+            infer=True
         )
         print(f"\n[System: Memory updated successfully! Raw result: {add_result}]\n")
     except Exception as e:
